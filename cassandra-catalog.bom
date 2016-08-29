@@ -1,9 +1,57 @@
 brooklyn.catalog:
-  version: 0.1.0
+  version: 0.1.1
+
+  publish:
+    description: |
+      Entities for running the Cassandra project in Apache Brooklyn.
+    license_code: Apache-2.0
+    icon_url: https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Cassandra_logo.svg/200px-Cassandra_logo.svg.png
 
   items:
+
+  - id: cassandra-cluster-template
+    description: |
+      A cluster of Cassandra nodes
+    name: "Cassandra cluster"
+    iconUrl: classpath:///cassandra-logo.png
+    itemType: template
+    item:
+      services:
+      - type: cassandra-cluster-application
+        name: "Cassandra cluster"
+
+  - id: cassandra-cluster-application
+    itemType: entity
+    item:
+      type: org.apache.brooklyn.entity.stock.BasicApplication
+
+      brooklyn.parameters:
+      - name: cassandra.archive.url
+        description: |
+          The URL for the Cassandra binary distribution archive
+        type: string
+        default: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        constraints:
+          - required
+      - name: cassandra.cluster.nodes
+        description: |
+          The number of nodes in the cluster
+        type: integer
+        default: 2
+        constraints:
+          - required
+
+      brooklyn.config:
+        cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        cassandra.cluster.nodes: 2
+
+      brooklyn.children:
+      - type: cassandra-cluster
+        name: "Cassandra cluster"
+
+
   - id: cassandra-node
-    description: Cassandra node
+    description: A Cassandra node
     itemType: entity
     item:
       type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
@@ -34,6 +82,13 @@ brooklyn.catalog:
         sed -i -e "s|- seeds: \"127.0.0.1\"|- seeds: \"${seeds}\"|" $config_file
         sed -i -e "s|listen_address: localhost|listen_address: $HOST_ADDRESS|" $config_file
 
+        # workaround for https://github.com/ibmcb/cbtool/issues/59
+        if [[ $CLUSTER_INDEX > 1 ]]
+        then
+          echo sleeping $((120*($CLUSTER_INDEX-1))) seconds
+          sleep $((120*($CLUSTER_INDEX-1)))
+        fi
+
         $INSTALL_DIR/cassandra/bin/cassandra
         echo $(pgrep -of cassandra) > ${PID_FILE:-pid.txt}
 
@@ -60,12 +115,11 @@ brooklyn.catalog:
   - id: cassandra-cluster
     description: A cluster of Cassandra nodes
     name: Cassandra Cluster
-    #iconUrl: ...
     item:
       type: org.apache.brooklyn.entity.group.DynamicCluster
 
       brooklyn.config:
-        initialSize: 2
+        initialSize: $brooklyn:config("cassandra.cluster.nodes")
 
       firstMemberSpec:
         $brooklyn:entitySpec:

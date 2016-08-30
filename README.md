@@ -12,7 +12,7 @@ Available configuration parameters are:
  - cassandra.cluster.nodes (# of nodes in the cluster)
 
 You can also use the `cassandra-cluster-template` entity directly.
-For example, use this blueprint to deploy a cluster to Blue Box:
+For example, use this blueprint to deploy a cluster to Blue Box on CentOS:
 
 ```
 name: Cassandra Cluster on Blue Box (LON)
@@ -33,8 +33,9 @@ services:
 
 It will start one node first and use its IP address as a seed for the other nodes.
 
+Tested with Centos 7.2, Ubuntu 14.04, Ubuntu 15.10 on Blue Box and SoftLayer
+
 ### KNOWN LIMITATIONS:
 
-*Centos only.* Tested with Centos 7.2.
 Only configures `listen_address` and `seeds`.
 Uses the defaults for everything else.

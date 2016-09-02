@@ -1,0 +1,58 @@
+name: Cassandra Cluster Blueprint Test
+
+# assumes the Vagrant setup from https://brooklyn.apache.org/v/latest/start/running.html
+# replace with your location of choice
+location:
+  byon:
+    user: vagrant
+    password: vagrant
+    hosts:
+      - 10.10.10.101
+      - 10.10.10.102
+
+services:
+
+  - type: cassandra-cluster
+    name: Test Cluster
+    id: test-cluster
+    brooklyn.config:
+      cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz'
+      cassandra.cluster.name: elegant_hopper
+      cassandra.cluster.nodes: 2
+
+  - type: org.apache.brooklyn.test.framework.TestCase
+    name: Check Deploy
+    brooklyn.children:
+    - type: org.apache.brooklyn.test.framework.TestSensor
+      name: Check test-cluster isUp
+      targetId: test-cluster
+      sensor: cluster.one_and_all.members.up
+      timeout: 10m
+      assert:
+      - equals: true
+    - type: org.apache.brooklyn.test.framework.LoopOverGroupMembersTestCase
+      name: Check Cluster Name
+      targetId: test-cluster
+      testSpec:
+        $brooklyn:entitySpec:
+          type: org.apache.brooklyn.test.framework.TestSshCommand
+          name: Check Cluster Name in Node
+          command: |
+            IN=$(ps --no-headers wwp$(pgrep -of 'java .*cas''sandra.*'))
+
+            IFS=' ' read -ra ADDR <<< "$IN"
+            for i in "${ADDR[@]}"; do
+              if [[ $i == -Dcassandra.logdir=* ]]; then
+                LOGDIR=${i:19}
+                break
+              fi
+            done
+
+            cd $LOGDIR
+            grep cluster_name ./system.log
+          assertStatus:
+            equals: 0
+          assertOut:
+            contains: 'cluster_name=elegant_hopper'
+          assertErr:
+            isEmpty: true

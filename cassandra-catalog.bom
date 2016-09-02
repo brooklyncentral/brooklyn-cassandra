@@ -1,5 +1,5 @@
 brooklyn.catalog:
-  version: 0.1.2
+  version: 0.1.3
 
   publish:
     description: |
@@ -33,6 +33,10 @@ brooklyn.catalog:
         default: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
         constraints:
           - required
+      - name: cassandra.cluster.name
+        description: |
+          The name of the Cassandra cluster (optional)
+        type: string
       - name: cassandra.cluster.nodes
         description: |
           The number of nodes in the cluster
@@ -62,6 +66,7 @@ brooklyn.catalog:
 
       shell.env:
         C_URL: $brooklyn:config("cassandra.archive.url")
+        C_CLUSTER_NAME: $brooklyn:config("cassandra.cluster.name")
         IS_FIRST_NODE: $brooklyn:config("is.first.node")
         FIRST_NODE_ADDRESS: $brooklyn:config("cassandra.first.node.address")
         CLUSTER_INDEX: $brooklyn:config("cluster.index")
@@ -86,6 +91,7 @@ brooklyn.catalog:
         seeds=${FIRST_NODE_ADDRESS:-$HOST_ADDRESS}
         sed -i -e "s|- seeds: \"127.0.0.1\"|- seeds: \"${seeds}\"|" $config_file
         sed -i -e "s|listen_address: localhost|listen_address: $HOST_ADDRESS|" $config_file
+        [[ -n "$C_CLUSTER_NAME" ]] && sed -i -e "s|cluster_name: 'Test Cluster'|cluster_name: '${C_CLUSTER_NAME//\'/\'\'}'|" $config_file
 
         # workaround for https://github.com/ibmcb/cbtool/issues/59
         if [[ $CLUSTER_INDEX > 1 ]]

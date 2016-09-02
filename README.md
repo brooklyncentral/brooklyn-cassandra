@@ -29,13 +29,24 @@ services:
     brooklyn.config:
       cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz'
       cassandra.cluster.nodes: 2
+      cassandra.cluster.name: 'my cluster'
 ```
 
 It will start one node first and use its IP address as a seed for the other nodes.
 
 Tested with Centos 7.2, Ubuntu 14.04, Ubuntu 15.10 on Blue Box and SoftLayer
 
+### TESTING:
+
+Use the provided `cassandra-cluster-test.yaml` blueprint to perform a live test
+deployment.
+
+The test case currently checks that
+
+ - the cluster nodes are all up within a specified timeout (10 minutes)
+ - the `cluster_name` is correctly configured on each node
+
 ### KNOWN LIMITATIONS:
 
-Only configures `listen_address` and `seeds`.
+Only configures `listen_address`, `seeds` and `cluster_name`.
 Uses the defaults for everything else.

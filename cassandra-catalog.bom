@@ -1,5 +1,5 @@
 brooklyn.catalog:
-  version: 0.1.6
+  version: 0.1.4-SNAPSHOT
 
   publish:
     description: |
@@ -63,6 +63,8 @@ brooklyn.catalog:
 
       brooklyn.config:
         cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        cql.port: 9042
+        gossip.port: 7000
         provisioning.properties:
           minRam: 4g
 

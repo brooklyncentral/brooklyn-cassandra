@@ -1,5 +1,5 @@
 brooklyn.catalog:
-  version: 0.1.3
+  version: 0.1.6
 
   publish:
     description: |
@@ -63,6 +63,8 @@ brooklyn.catalog:
 
       brooklyn.config:
         cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        provisioning.properties:
+          minRam: 4g
 
       shell.env:
         C_URL: $brooklyn:config("cassandra.archive.url")
@@ -70,7 +72,7 @@ brooklyn.catalog:
         IS_FIRST_NODE: $brooklyn:config("is.first.node")
         FIRST_NODE_ADDRESS: $brooklyn:config("cassandra.first.node.address")
         CLUSTER_INDEX: $brooklyn:config("cluster.index")
-        HOST_ADDRESS: $brooklyn:attributeWhenReady("host.address")
+        HOST_ADDRESS: $brooklyn:attributeWhenReady("host.subnet.address")
 
       install.command: |
         which yum && (
@@ -131,6 +133,7 @@ brooklyn.catalog:
 
       brooklyn.config:
         initialSize: $brooklyn:config("cassandra.cluster.nodes")
+        start.timeout: 20m
 
       firstMemberSpec:
         $brooklyn:entitySpec:
@@ -141,7 +144,7 @@ brooklyn.catalog:
           brooklyn.config:
             is.first.node: true
             cluster.index: $brooklyn:config("cluster.member.id")
-            cassandra.first.node.address: $brooklyn:component("first-node").attributeWhenReady("host.address")
+            cassandra.first.node.address: $brooklyn:component("first-node").attributeWhenReady("host.subnet.address")
 
       memberSpec:
         $brooklyn:entitySpec:
@@ -151,7 +154,7 @@ brooklyn.catalog:
           brooklyn.config:
             is.first.node: false
             cluster.index: $brooklyn:config("cluster.member.id")
-            cassandra.first.node.address: $brooklyn:component("first-node").attributeWhenReady("host.address")
+            cassandra.first.node.address: $brooklyn:component("first-node").attributeWhenReady("host.subnet.address")
 
             launch.latch: $brooklyn:component("first-node").attributeWhenReady("service.isUp")
 

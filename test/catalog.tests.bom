@@ -11,6 +11,16 @@ brooklyn.catalog:
       - type: cassandra-cluster-template
         id: target-app
         name: Cassandra
+        brooklyn.config:
+          cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz'
+          cassandra.cluster.nodes: 2
+
+      - type: cassandra-node
+        name: Cassandra Client
+        id: cassandra-client
+        launch.command: |
+          while true ; do sleep 3600; done & echo $! > ${PID_FILE}
+        checkRunning.command: ""
 
       - type: test-case
         brooklyn.config:
@@ -20,6 +30,69 @@ brooklyn.catalog:
 
         brooklyn.children:
 
-        - type: assert-up-and-running-initial
-          name: "1. Node up and running"
+        - type: test-case
+          name: "1. Effector Restart, Stop & Restart Tests"
+          brooklyn.children:
+          - type: assert-up-and-running-initial
+            name: "1.1 Node up and running"
 
+        - type: test-case
+          name: "2. Cluster Connectivity Tests"
+          brooklyn.children:
+          - type: test-ssh
+            name: "2.1 Add keyspace to master"
+            shell.env:
+              INSTALL_DIR: $brooklyn:component("cassandra-client").attributeWhenReady("install.dir")
+              FIRST_NODE: $brooklyn:component("first-node").attributeWhenReady("host.address")
+            brooklyn.config:
+              targetId: cassandra-client
+              command: |
+                $INSTALL_DIR/cassandra/bin/cqlsh $FIRST_NODE -e "CREATE KEYSPACE IF NOT EXISTS myKS WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2};"
+              assertStatus:
+                equals: 0
+
+          - type: assert-up-and-running
+            name: "2.2 Wait for secondary Cassandra node to be up and running"
+            targetId: cassandra-node
+
+          - type: test-ssh
+            name: "2.3 Check keyspace on secondary node"
+            shell.env:
+              INSTALL_DIR: $brooklyn:component("cassandra-client").attributeWhenReady("install.dir")
+              SECOND_NODE: $brooklyn:component("cassandra-node").attributeWhenReady("host.address")
+            brooklyn.config:
+              targetId: cassandra-client
+              command: |
+                $INSTALL_DIR/cassandra/bin/cqlsh $SECOND_NODE -e "DESCRIBE keyspaces"
+              assertStatus:
+                equals: 0
+              assertOut:
+                contains: "myks"
+
+        - type: test-case
+          name: "3. Effector Tests :: resize"
+          brooklyn.children:
+            - type: invoke-effector
+              name: "3.1. Resize cluster to 3"
+              target: $brooklyn:entity("target-app").descendant("cassandra-cluster")
+              effector: resize
+              params:
+                desiredSize: 3
+            - type: assert-sensor
+              name: "3.2. Size of cluster increased to 3"
+              targetId: cassandra-cluster
+              sensor: group.members.count
+              assert:
+                equals: 3
+            - type: invoke-effector
+              name: "3.3. Resize cluster to 2"
+              target: $brooklyn:entity("target-app").descendant("cassandra-cluster")
+              effector: resize
+              params:
+                desiredSize: 2
+            - type: assert-sensor
+              name: "3.4. Size of cluster decreased to 2"
+              targetId: cassandra-cluster
+              sensor: group.members.count
+              assert:
+                equals: 2

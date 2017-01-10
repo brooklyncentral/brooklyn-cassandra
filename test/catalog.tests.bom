@@ -5,6 +5,7 @@ brooklyn.catalog:
   - "https://raw.githubusercontent.com/brooklyncentral/common-catalog-utils/master/common-tests/src/main/resources/commontests/common.tests.bom"
 
   - id: cassandra-tests
+    name: "Cassandra Tests"
     itemType: template
     item:
       services:

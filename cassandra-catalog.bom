@@ -52,6 +52,7 @@ brooklyn.catalog:
       brooklyn.children:
       - type: cassandra-cluster
         name: "Cassandra cluster"
+        id: cassandra-cluster
 
 
   - id: cassandra-node
@@ -65,6 +66,7 @@ brooklyn.catalog:
         cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
         cql.port: 9042
         gossip.port: 7000
+        jmx.port: 7199
         provisioning.properties:
           minRam: 4g
 
@@ -95,6 +97,7 @@ brooklyn.catalog:
         seeds=${FIRST_NODE_ADDRESS:-$HOST_ADDRESS}
         sed -i -e "s|- seeds: \"127.0.0.1\"|- seeds: \"${seeds}\"|" $config_file
         sed -i -e "s|listen_address: localhost|listen_address: $HOST_ADDRESS|" $config_file
+        sed -i -e "s|rpc_address: localhost|rpc_address: $HOST_ADDRESS|" $config_file
         [[ -n "$C_CLUSTER_NAME" ]] && sed -i -e "s|cluster_name: 'Test Cluster'|cluster_name: '${C_CLUSTER_NAME//\'/\'\'}'|" $config_file
 
         # workaround for https://github.com/ibmcb/cbtool/issues/59
@@ -126,6 +129,12 @@ brooklyn.catalog:
             - "service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi"
             - $brooklyn:attributeWhenReady("host.subnet.hostname")
             - 7199
+      - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
+        brooklyn.config:
+          # wait 15s after service fails before propagating failure
+          serviceFailedStabilizationDelay: 15s
+      brooklyn.policies:
+      - type: org.apache.brooklyn.policy.ha.ServiceRestarter
 
   - id: cassandra-cluster
     description: A cluster of Cassandra nodes
@@ -152,6 +161,7 @@ brooklyn.catalog:
         $brooklyn:entitySpec:
           type: cassandra-node
           name: Cassandra node
+          id: cassandra-node
 
           brooklyn.config:
             is.first.node: false
@@ -168,3 +178,8 @@ brooklyn.catalog:
           enricher.aggregating.fromMembers: true
           enricher.sourceSensor: $brooklyn:sensor("host.address")
           enricher.targetSensor: $brooklyn:sensor("node.host.address.list")
+
+      brooklyn.policies:
+      - type: org.apache.brooklyn.policy.ha.ServiceReplacer
+        brooklyn.config:
+          failureSensorToMonitor: $brooklyn:sensor("ha.entityFailed")

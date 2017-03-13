@@ -80,7 +80,9 @@ brooklyn.catalog:
 
       install.command: |
         which yum && (
-          sudo yum -y install wget java-1.8.0-openjdk
+          sudo yum install -y yum-plugin-fastestmirror
+          sudo yum update -y
+          sudo yum -y install wget java-1.8.0-openjdk python27
         )
         which apt-get && (
           sudo add-apt-repository -y ppa:openjdk-r/ppa

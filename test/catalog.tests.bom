@@ -23,6 +23,7 @@ brooklyn.catalog:
           while true ; do sleep 3600; done & echo $! > ${PID_FILE}
         checkRunning.command: ""
 
+
       - type: test-case
         brooklyn.config:
           targetId: target-app
@@ -48,6 +49,8 @@ brooklyn.catalog:
             brooklyn.config:
               targetId: cassandra-client
               command: |
+                eval "$(pyenv init -)"
+                eval "$(pyenv virtualenv-init -)"
                 $INSTALL_DIR/cassandra/bin/cqlsh $FIRST_NODE -e "CREATE KEYSPACE IF NOT EXISTS myKS WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 2};"
               assertStatus:
                 equals: 0
@@ -64,6 +67,8 @@ brooklyn.catalog:
             brooklyn.config:
               targetId: cassandra-client
               command: |
+                eval "$(pyenv init -)"
+                eval "$(pyenv virtualenv-init -)"
                 $INSTALL_DIR/cassandra/bin/cqlsh $SECOND_NODE -e "DESCRIBE keyspaces"
               assertStatus:
                 equals: 0

@@ -22,6 +22,11 @@ brooklyn.catalog:
         launch.command: |
           while true ; do sleep 3600; done & echo $! > ${PID_FILE}
         checkRunning.command: ""
+        brooklyn.config:
+          pre.install.command:
+            sudo yum install -y yum-plugin-fastestmirror
+            sudo yum update -y
+            sudo yum -y install python27
 
       - type: test-case
         brooklyn.config:

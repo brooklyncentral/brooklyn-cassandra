@@ -78,6 +78,19 @@ brooklyn.catalog:
         CLUSTER_INDEX: $brooklyn:config("cluster.index")
         HOST_ADDRESS: $brooklyn:attributeWhenReady("host.subnet.address")
 
+      pre.install.command: |
+        sudo yum install -y patch git
+        sudo yum groupinstall -y "Development tools"
+        sudo yum install -y zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel
+        curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+        sudo ln -s ~/.pyenv/bin/pyenv /usr/local/bin/pyenv
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+        echo 'eval "$(pyenv init -)" ; eval "$(pyenv virtualenv-init -)"' >> ~/.bash_profile
+        echo 'eval "$(pyenv init -)" ; eval "$(pyenv virtualenv-init -)"' >> ~/.bash_rc
+        pyenv install 2.7.8
+        pyenv local 2.7.8
+
       install.command: |
         which yum && (
           sudo yum -y install wget java-1.8.0-openjdk

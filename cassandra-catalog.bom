@@ -157,7 +157,7 @@ brooklyn.catalog:
 
       brooklyn.config:
         initialSize: $brooklyn:config("cassandra.cluster.nodes")
-        start.timeout: 20m
+        start.timeout: 40m
 
       firstMemberSpec:
         $brooklyn:entitySpec:

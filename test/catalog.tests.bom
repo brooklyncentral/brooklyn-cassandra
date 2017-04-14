@@ -41,11 +41,14 @@ brooklyn.catalog:
         - type: test-case
           name: "2. Cluster Connectivity Tests"
           brooklyn.children:
+          - type: assert-up-and-running
+            name: "2.1 Wait for Cassandra client to be up and running"
+            targetId: cassandra-client
           - type: test-ssh
-            name: "2.1 Add keyspace to master"
+            name: "2.2 Add keyspace to master"
             shell.env:
               INSTALL_DIR: $brooklyn:component("cassandra-client").attributeWhenReady("install.dir")
-              FIRST_NODE: $brooklyn:component("first-node").attributeWhenReady("host.address")
+              FIRST_NODE: $brooklyn:component("first-node").attributeWhenReady("host.subnet.address")
             brooklyn.config:
               targetId: cassandra-client
               command: |
@@ -56,14 +59,14 @@ brooklyn.catalog:
                 equals: 0
 
           - type: assert-up-and-running
-            name: "2.2 Wait for secondary Cassandra node to be up and running"
+            name: "2.3 Wait for secondary Cassandra node to be up and running"
             targetId: cassandra-node
 
           - type: test-ssh
-            name: "2.3 Check keyspace on secondary node"
+            name: "2.4 Check keyspace on secondary node"
             shell.env:
               INSTALL_DIR: $brooklyn:component("cassandra-client").attributeWhenReady("install.dir")
-              SECOND_NODE: $brooklyn:component("cassandra-node").attributeWhenReady("host.address")
+              SECOND_NODE: $brooklyn:component("cassandra-node").attributeWhenReady("host.subnet.address")
             brooklyn.config:
               targetId: cassandra-client
               command: |

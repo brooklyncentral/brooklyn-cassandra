@@ -30,7 +30,7 @@ brooklyn.catalog:
         description: |
           The URL for the Cassandra binary distribution archive
         type: string
-        default: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        default: http://archive.apache.org/dist/cassandra/3.10/apache-cassandra-3.10-bin.tar.gz
         constraints:
           - required
       - name: cassandra.cluster.name
@@ -46,14 +46,13 @@ brooklyn.catalog:
           - required
 
       brooklyn.config:
-        cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
+        cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.10/apache-cassandra-3.10-bin.tar.gz
         cassandra.cluster.nodes: 2
 
       brooklyn.children:
       - type: cassandra-cluster
         name: "Cassandra cluster"
         id: cassandra-cluster
-
 
   - id: cassandra-node
     description: A Cassandra node
@@ -63,7 +62,6 @@ brooklyn.catalog:
       name: Cassandra node
 
       brooklyn.config:
-        cassandra.archive.url: http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz
         cql.port: 9042
         gossip.port: 7000
         jmx.port: 7199

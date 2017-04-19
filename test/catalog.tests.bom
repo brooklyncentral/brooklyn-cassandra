@@ -13,12 +13,14 @@ brooklyn.catalog:
         id: target-app
         name: Cassandra
         brooklyn.config:
-          cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.5/apache-cassandra-3.5-bin.tar.gz'
+          cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.10/apache-cassandra-3.10-bin.tar.gz'
           cassandra.cluster.nodes: 2
 
       - type: cassandra-node
         name: Cassandra Client
         id: cassandra-client
+        brooklyn.config:
+          cassandra.archive.url: 'http://archive.apache.org/dist/cassandra/3.10/apache-cassandra-3.10-bin.tar.gz'
         launch.command: |
           while true ; do sleep 3600; done & echo $! > ${PID_FILE}
         checkRunning.command: ""
